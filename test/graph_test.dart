@@ -141,13 +141,13 @@ void main() {
       });
 
       graph.addEdge('a', 'b', edgeData: 'data');
-      expect(_encodeDecode(graph.toJson()), {
+      _expectDirectedGraphOutputEqual({
         'a': [
           {'target': 'b'},
           {'target': 'b', 'data': 'data'}
         ],
         'b': []
-      });
+      }, graph);
     });
 
     test('fromJson', () {
@@ -160,7 +160,7 @@ void main() {
       };
       final graph = DirectedGraph<String, String>.fromJson(json);
 
-      expect(_encodeDecode(graph.toJson()), json);
+      _expectDirectedGraphOutputEqual(json, graph);
     });
 
     test('fromJson asserts on inconsistant input', () {
@@ -190,14 +190,19 @@ void main() {
       final graph =
           DirectedGraph<int, int>.fromJson(json, nodeConvert: int.parse);
 
-      final outputJson = _encodeDecode(graph.toJson()) as Map<String, dynamic>;
-
-      expect(outputJson.keys, json.keys);
-      for (var key in json.keys) {
-        expect(outputJson, containsPair(key, unorderedEquals(json[key])));
-      }
+      _expectDirectedGraphOutputEqual(json, graph);
     });
   });
+}
+
+void _expectDirectedGraphOutputEqual(
+    Map<String, dynamic> expected, DirectedGraph graph) {
+  final actual = _encodeDecode(graph.toJson()) as Map<String, dynamic>;
+
+  expect(actual.keys, expected.keys);
+  for (var key in expected.keys) {
+    expect(actual, containsPair(key, unorderedEquals(expected[key] as List)));
+  }
 }
 
 Object _encodeDecode(Object source) {
