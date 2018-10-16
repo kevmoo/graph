@@ -141,13 +141,13 @@ void main() {
       });
 
       graph.addEdge('a', 'b', edgeData: 'data');
-      _expectDirectedGraphOutputEqual({
+      _expectDirectedGraphOutputEqual(graph, {
         'a': [
           {'target': 'b'},
           {'target': 'b', 'data': 'data'}
         ],
         'b': []
-      }, graph);
+      });
     });
 
     test('fromJson', () {
@@ -160,7 +160,7 @@ void main() {
       };
       final graph = DirectedGraph<String, String>.fromJson(json);
 
-      _expectDirectedGraphOutputEqual(json, graph);
+      _expectDirectedGraphOutputEqual(graph, json);
     });
 
     test('fromJson asserts on inconsistant input', () {
@@ -190,13 +190,13 @@ void main() {
       final graph =
           DirectedGraph<int, int>.fromJson(json, nodeConvert: int.parse);
 
-      _expectDirectedGraphOutputEqual(json, graph);
+      _expectDirectedGraphOutputEqual(graph, json);
     });
   });
 }
 
 void _expectDirectedGraphOutputEqual(
-    Map<String, dynamic> expected, DirectedGraph graph) {
+    DirectedGraph graph, Map<String, dynamic> expected) {
   final actual = _encodeDecode(graph.toJson()) as Map<String, dynamic>;
 
   expect(actual.keys, expected.keys);
