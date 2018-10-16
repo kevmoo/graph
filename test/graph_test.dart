@@ -121,6 +121,85 @@ void main() {
         expect(graph.edgeCount, 1);
       });
     });
+
+    group('connected', () {
+      test('empty graph has no connection', () {
+        expect(graph.connected(0, 1), isFalse);
+        expect(graph.connectedNodes, isEmpty);
+      });
+
+      test('self link', () {
+        graph.addEdge(1, 1);
+        graph.addEdge(1, 1, edgeData: 'self');
+        expect(graph.length, 1);
+        expect(graph.edgeCount, 2);
+        expect(graph.connected(1, 1), isTrue);
+
+        expect(graph.connected(1, 1), isTrue);
+        expect(graph.connectedNodes.single, const Pair(1, 1));
+      });
+
+      test('many links', () {
+        [1, 2, 3, 4, 5].forEach(graph.add);
+        expect(graph.length, 5);
+        expect(graph.edgeCount, 0);
+        expect(graph.connectedNodes, isEmpty);
+
+        for (var i = 1; i < 5; i++) {
+          graph.addEdge(i, i + 1);
+        }
+        expect(graph.length, 5);
+        expect(graph.edgeCount, 4);
+
+        final expectedPairs = const [
+          Pair(1, 2),
+          Pair(2, 3),
+          Pair(3, 4),
+          Pair(4, 5)
+        ];
+
+        expect(graph.connectedNodes, unorderedEquals(expectedPairs));
+
+        // Adding extra data to each connection doesn't change `connectedNodes`
+        for (var i = 1; i < 5; i++) {
+          graph.addEdge(i, i + 1, edgeData: 'extra data');
+        }
+        expect(graph.length, 5);
+        expect(graph.edgeCount, 8);
+
+        expect(graph.connectedNodes, unorderedEquals(expectedPairs));
+
+        // Adding edges going the other way doesn't change `connectedNodes`
+        for (var i = 1; i < 5; i++) {
+          graph.addEdge(i + 1, i);
+        }
+        expect(graph.length, 5);
+        expect(graph.edgeCount, 12);
+        expect(graph.connectedNodes, unorderedEquals(expectedPairs));
+
+        // Complete the circle, start -> end
+        expect(graph.addEdge(1, 5), isTrue);
+        expect(graph.length, 5);
+        expect(graph.edgeCount, 13);
+
+        expect(graph.connectedNodes,
+            unorderedEquals(expectedPairs.followedBy(const [Pair(1, 5)])));
+
+        // remove just added connection
+        expect(graph.removeEdge(1, 5), isTrue);
+        expect(graph.length, 5);
+        expect(graph.edgeCount, 12);
+        expect(graph.connectedNodes, unorderedEquals(expectedPairs));
+
+        // Complete the circle, end -> start
+        expect(graph.addEdge(5, 1), isTrue);
+        expect(graph.length, 5);
+        expect(graph.edgeCount, 13);
+
+        expect(graph.connectedNodes,
+            unorderedEquals(expectedPairs.followedBy(const [Pair(1, 5)])));
+      });
+    });
   });
 
   group('json', () {
@@ -197,7 +276,12 @@ void main() {
 
 void _expectDirectedGraphOutputEqual(
     DirectedGraph graph, Map<String, dynamic> expected) {
-  final actual = _encodeDecode(graph.toJson()) as Map<String, dynamic>;
+  final prettyEncode =
+      const JsonEncoder.withIndent(' ').convert(graph.toJson());
+
+  //printOnFailure(prettyEncode);
+
+  final actual = jsonDecode(prettyEncode) as Map<String, dynamic>;
 
   expect(actual.keys, expected.keys);
   for (var key in expected.keys) {
