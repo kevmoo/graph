@@ -1,0 +1,11 @@
+name: graph
+description: A starting point for Dart libraries or applications.
+version: 0.1.0-dev
+homepage: https://github.com/kevmoo/graph
+author: Kevin Moore <kevmoo@google.com>
+
+environment:
+  sdk: '>=2.0.0 <3.0.0'
+
+dev_dependencies:
+  test: ^1.0.0
