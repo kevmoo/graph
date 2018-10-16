@@ -47,7 +47,22 @@ class DirectedGraph<N, E> {
     return existingCount < nodeCount;
   }
 
-  bool removeNode(N nodeData) => _remove(nodeData) != null;
+  bool removeNode(N nodeData) {
+    final node = _nodes.remove(nodeData);
+
+    if (node == null) {
+      return false;
+    }
+
+    // find all edges coming into `node` - and remove them
+    for (var otherNode in _nodes.values) {
+      assert(otherNode != node);
+      assert(otherNode.value != node.value);
+      otherNode.outgoingEdges.removeWhere((e) => e.target == node.value);
+    }
+
+    return true;
+  }
 
   bool connected(N a, N b) {
     final nodeA = _nodes[a];
@@ -70,23 +85,6 @@ class DirectedGraph<N, E> {
       }
     }
     return pairs;
-  }
-
-  Set<Edge<N, E>> _remove(Object key) {
-    final node = _nodes.remove(key);
-
-    if (node == null) {
-      return null;
-    }
-
-    // find all edges coming into `node` - and remove them
-    for (var otherNode in _nodes.values) {
-      assert(otherNode != node);
-      assert(otherNode.value != node.value);
-      otherNode.outgoingEdges.removeWhere((e) => e.target == node.value);
-    }
-
-    return node.outgoingEdges;
   }
 
   bool addEdge(N from, N to, {E edgeData}) {
