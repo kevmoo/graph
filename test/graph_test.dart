@@ -198,6 +198,11 @@ void main() {
 
         expect(graph.connectedNodes,
             unorderedEquals(expectedPairs.followedBy(const [Pair(1, 5)])));
+
+        for (var pair in graph.connectedNodes) {
+          expect(graph.connected(pair.item1, pair.item2), isTrue);
+          expect(graph.connected(pair.item2, pair.item1), isTrue);
+        }
       });
     });
   });
