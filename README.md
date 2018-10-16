@@ -1,1 +1,3 @@
+[![Build Status](https://travis-ci.org/kevmoo/graph.svg?branch=master)](https://travis-ci.org/kevmoo/graph)
+
 TODO...
