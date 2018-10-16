@@ -7,7 +7,7 @@ void main() {
     ..addEdge('c', 'a');
 
   // 3
-  print(graph.length);
+  print(graph.nodeCount);
 
   // 3
   print(graph.edgeCount);

@@ -1,13 +1,11 @@
 import 'dart:collection';
 
-class DirectedGraph<N, E> extends MapBase<N, Set<Edge<N, E>>> {
+class DirectedGraph<N, E> {
   final Map<N, _Node<N, E>> _nodes;
 
-  @override
-  int get length => _nodes.length;
+  int get nodeCount => _nodes.length;
 
-  @override
-  Iterable<N> get keys => _nodes.keys;
+  Iterable<N> get nodes => _nodes.keys;
 
   int get edgeCount =>
       _nodes.values.fold(0, (int v, n) => v + n.outgoingEdges.length);
@@ -41,12 +39,12 @@ class DirectedGraph<N, E> extends MapBase<N, Set<Edge<N, E>>> {
       throw ArgumentError.notNull('nodeData');
     }
 
-    final existingCount = length;
+    final existingCount = nodeCount;
     _nodeFor(nodeData);
-    return existingCount < length;
+    return existingCount < nodeCount;
   }
 
-  bool removeNode(N nodeData) => remove(nodeData) != null;
+  bool removeNode(N nodeData) => _remove(nodeData) != null;
 
   bool connected(N a, N b) {
     final nodeA = _nodes[a];
@@ -71,8 +69,7 @@ class DirectedGraph<N, E> extends MapBase<N, Set<Edge<N, E>>> {
     return pairs;
   }
 
-  @override
-  Set<Edge<N, E>> remove(Object key) {
+  Set<Edge<N, E>> _remove(Object key) {
     final node = _nodes.remove(key);
 
     if (node == null) {
@@ -117,22 +114,7 @@ class DirectedGraph<N, E> extends MapBase<N, Set<Edge<N, E>>> {
     return _nodes.putIfAbsent(nodeData, () => _Node._(nodeData));
   }
 
-  @override
-  Set<Edge<N, E>> operator [](Object key) => _nodes[key]?.outgoingEdges;
-
-  /// Creates or updates a node with value [key].
-  ///
-  /// If [key] already exists, [value] will replace all existing edges.
-  ///
-  /// If [value] is `null`, it will be treated as empty.
-  @override
-  void operator []=(N key, Set<Edge<N, E>> value) {
-    final node = _nodeFor(key);
-    node.outgoingEdges.clear();
-    node.outgoingEdges.addAll(value ?? []);
-  }
-
-  @override
+  // TODO: test!
   void clear() {
     _nodes.clear();
   }
@@ -144,8 +126,8 @@ class DirectedGraph<N, E> extends MapBase<N, Set<Edge<N, E>>> {
   /// unique for each node in the map.
   ///
   ///
-  Map<String, List> toJson() => Map.fromEntries(entries.map((e) {
-        return MapEntry(e.key.toString(), e.value.toList());
+  Map<String, List> toJson() => Map.fromEntries(_nodes.entries.map((e) {
+        return MapEntry(e.key.toString(), e.value.outgoingEdges.toList());
       }));
 }
 
