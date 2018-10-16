@@ -1,10 +1,11 @@
 import 'dart:collection';
 
 import 'edge.dart';
+import 'node.dart';
 import 'pair.dart';
 
 class DirectedGraph<N, E> {
-  final Map<N, _Node<N, E>> _nodes;
+  final Map<N, Node<N, E>> _nodes;
 
   int get nodeCount => _nodes.length;
 
@@ -20,7 +21,7 @@ class DirectedGraph<N, E> {
         'The source map must contain every node represented edge data.');
   }
 
-  DirectedGraph() : this._(HashMap<N, _Node<N, E>>());
+  DirectedGraph() : this._(HashMap<N, Node<N, E>>());
 
   factory DirectedGraph.fromJson(Map<String, dynamic> json,
       {N Function(String) nodeConvert}) {
@@ -30,7 +31,7 @@ class DirectedGraph<N, E> {
       return nodeConvert((entry as MapEntry<String, dynamic>).key);
     }, value: (entry) {
       final e = (entry as MapEntry<String, dynamic>);
-      return _Node._(nodeConvert(e.key))
+      return Node(nodeConvert(e.key))
         ..outgoingEdges.addAll((e.value as List).map((v) => Edge.fromJson(
             v as Map<String, dynamic>,
             nodeConvert: nodeConvert)));
@@ -110,9 +111,9 @@ class DirectedGraph<N, E> {
     return fromNode.outgoingEdges.remove(Edge(to, data: edgeData));
   }
 
-  _Node<N, E> _nodeFor(N nodeData) {
+  Node<N, E> _nodeFor(N nodeData) {
     assert(nodeData != null);
-    return _nodes.putIfAbsent(nodeData, () => _Node._(nodeData));
+    return _nodes.putIfAbsent(nodeData, () => Node(nodeData));
   }
 
   // TODO: test!
@@ -130,13 +131,4 @@ class DirectedGraph<N, E> {
   Map<String, List> toJson() => Map.fromEntries(_nodes.entries.map((e) {
         return MapEntry(e.key.toString(), e.value.outgoingEdges.toList());
       }));
-}
-
-class _Node<N, E> {
-  final N value;
-  final outgoingEdges = HashSet<Edge<N, E>>();
-
-  bool edgeTo(N other) => outgoingEdges.any((e) => e.target == other);
-
-  _Node._(this.value);
 }
