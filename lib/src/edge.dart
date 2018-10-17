@@ -4,11 +4,14 @@ class Edge<N, D> {
 
   Edge(this.target, {this.data});
 
-  factory Edge.fromJson(Map<String, dynamic> json,
-      {N Function(String) nodeConvert}) {
+  factory Edge.fromJson(Object json, {N Function(String) nodeConvert}) {
     nodeConvert ??= (String value) => value as N;
 
-    return Edge(nodeConvert(json['target'] as String), data: json['data'] as D);
+    if (json is Map) {
+      return Edge(nodeConvert(json['target'] as String),
+          data: json['data'] as D);
+    }
+    return Edge(nodeConvert(json as String));
   }
 
   @override
@@ -18,11 +21,11 @@ class Edge<N, D> {
   @override
   int get hashCode => target.hashCode * 31 + data.hashCode;
 
-  Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{'target': target.toString()};
-    if (data != null) {
-      map['data'] = data;
+  Object toJson() {
+    if (data == null) {
+      return target.toString();
     }
-    return map;
+
+    return {'target': target.toString(), 'data': data};
   }
 }

@@ -195,16 +195,14 @@ void main() {
 
       graph.addEdge('a', 'b');
       expect(_encodeDecode(graph), {
-        'a': [
-          {'target': 'b'}
-        ],
+        'a': ['b'],
         'b': []
       });
 
       graph.addEdge('a', 'b', edgeData: 'data');
       _expectDirectedGraphOutputEqual(graph, {
         'a': [
-          {'target': 'b'},
+          'b',
           {'target': 'b', 'data': 'data'}
         ],
         'b': []
@@ -214,7 +212,7 @@ void main() {
     test('fromJson', () {
       final json = {
         'a': [
-          {'target': 'b'},
+          'b',
           {'target': 'b', 'data': 'data'}
         ],
         'b': []
@@ -239,7 +237,7 @@ void main() {
     test('to/fromJson with conversions', () {
       final json = {
         '1': [
-          {'target': '2'},
+          '2',
           {'target': '2', 'data': 2}
         ],
         '2': []
