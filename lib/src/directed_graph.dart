@@ -133,6 +133,7 @@ class DirectedGraph<N extends Comparable, E> {
   /// `toString`. To create a valid [Map], the `toString` on each key must be
   /// unique for each node in the map.
   Map<String, List> toJson() => Map.fromEntries(_nodes.entries.map((e) {
-        return MapEntry(e.key.toString(), e.value.outgoingEdges.toList());
+        return MapEntry(e.key.toString(),
+            e.value.outgoingEdges.map((e) => e.toJson()).toList());
       }));
 }
