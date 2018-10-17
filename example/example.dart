@@ -4,11 +4,21 @@ void main() {
   final graph = DirectedGraph<String, String>()
     ..addEdge('a', 'b')
     ..addEdge('b', 'c')
-    ..addEdge('c', 'a');
+    ..addEdge('c', 'a')
+    ..add('d');
 
-  // 3
-  print(graph.nodeCount);
+  print('Node count: ${graph.nodeCount}');
+  // Node count: 4
 
-  // 3
-  print(graph.edgeCount);
+  print('Edge count: ${graph.edgeCount}');
+  // Edge count: 3
+
+  print('JSON: ${graph.toJson()}');
+  // JSON: {c: [a], a: [b], b: [c], d: []}
+
+  print('Components: ${graph.stronglyConnectedComponents()}');
+  // Components: [[b, a, c], [d]]
+
+  print('Connected pairs: ${graph.connectedNodes}');
+  // Connected pairs: {(b, c), (a, b), (a, c)}
 }
