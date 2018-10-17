@@ -1,5 +1,7 @@
 import 'dart:collection';
 
+import 'package:graphs/graphs.dart' as g;
+
 import 'edge.dart';
 import 'node.dart';
 import 'pair.dart';
@@ -120,6 +122,10 @@ class DirectedGraph<N extends Comparable, E> {
   void clear() {
     _nodes.clear();
   }
+
+  List<List<N>> stronglyConnectedComponents() =>
+      g.stronglyConnectedComponents<N, N>(
+          nodes, (n) => n, (n) => _nodes[n].outgoingEdges.map((e) => e.target));
 
   /// Returns a [Map] representing a valid JSON value of `this`.
   ///
