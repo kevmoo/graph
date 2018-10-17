@@ -187,14 +187,14 @@ void main() {
   group('json', () {
     test('toJson', () {
       final graph = DirectedGraph<String, String>();
-      expect(_encodeDecode(graph.toJson()), {});
+      expect(_encodeDecode(graph), {});
 
       graph.add('a');
       graph.add('b');
-      expect(_encodeDecode(graph.toJson()), {'a': [], 'b': []});
+      expect(_encodeDecode(graph), {'a': [], 'b': []});
 
       graph.addEdge('a', 'b');
-      expect(_encodeDecode(graph.toJson()), {
+      expect(_encodeDecode(graph), {
         'a': [
           {'target': 'b'}
         ],
@@ -258,8 +258,7 @@ void main() {
 
 void _expectDirectedGraphOutputEqual(
     DirectedGraph graph, Map<String, dynamic> expected) {
-  final prettyEncode =
-      const JsonEncoder.withIndent(' ').convert(graph.toJson());
+  final prettyEncode = const JsonEncoder.withIndent(' ').convert(graph);
 
   //printOnFailure(prettyEncode);
 
