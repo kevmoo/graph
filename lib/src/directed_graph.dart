@@ -18,7 +18,7 @@ class DirectedGraph<N extends Comparable, E> {
     assert(
         _nodes.values.every((node) =>
             node.outgoingEdges.every((e) => _nodes.containsKey(e.target))),
-        'The source map must contain every node represented edge data.');
+        'The source map must contain every node representing edge data.');
   }
 
   DirectedGraph() : this._(HashMap<N, Node<N, E>>());
@@ -27,15 +27,18 @@ class DirectedGraph<N extends Comparable, E> {
       {N Function(String) nodeConvert}) {
     nodeConvert ??= (String value) => value as N;
 
-    return DirectedGraph._(HashMap.fromIterable(json.entries, key: (entry) {
-      return nodeConvert((entry as MapEntry<String, dynamic>).key);
-    }, value: (entry) {
-      final e = (entry as MapEntry<String, dynamic>);
-      return Node(nodeConvert(e.key))
-        ..outgoingEdges.addAll((e.value as List).map((v) => Edge.fromJson(
+    // TODO: replace with HashMap.fromEntries - dart-lang/sdk#34818
+    final hashMap = HashMap<N, Node<N, E>>()
+      ..addEntries(json.entries.map((entry) {
+        final key = nodeConvert(entry.key);
+        final edges = (entry.value as List).map((v) => Edge<N, E>.fromJson(
             v as Map<String, dynamic>,
-            nodeConvert: nodeConvert)));
-    }));
+            nodeConvert: nodeConvert));
+        final value = Node<N, E>(nodeConvert(entry.key))
+          ..outgoingEdges.addAll(edges);
+        return MapEntry(key, value);
+      }));
+    return DirectedGraph._(hashMap);
   }
 
   bool add(N nodeData) {
