@@ -217,9 +217,19 @@ void main() {
         ],
         'b': []
       };
-      final graph = DirectedGraph<String, String>.fromJson(json);
+      _expectDirectedGraphOutputEqual(
+          DirectedGraph<String, String>.fromJson(json), json);
 
-      _expectDirectedGraphOutputEqual(graph, json);
+      // null connections is treated as empty
+      _expectDirectedGraphOutputEqual(
+          DirectedGraph<String, String>.fromJson({
+            'a': [
+              'b',
+              {'target': 'b', 'data': 'data'}
+            ],
+            'b': null // explicitly null
+          }),
+          json);
     });
 
     test('fromJson asserts on inconsistant input', () {

@@ -31,7 +31,7 @@ class DirectedGraph<N extends Comparable, E> {
     final hashMap = HashMap<N, Node<N, E>>()
       ..addEntries(json.entries.map((entry) {
         final key = nodeConvert(entry.key);
-        final edges = (entry.value as List)
+        final edges = (entry.value as List ?? const [])
             .map((v) => Edge<N, E>.fromJson(v, nodeConvert: nodeConvert));
         final value = Node<N, E>(nodeConvert(entry.key))
           ..outgoingEdges.addAll(edges);
