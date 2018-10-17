@@ -118,7 +118,7 @@ void main() {
         expect(graph.connected(1, 1), isTrue);
 
         expect(graph.connected(1, 1), isTrue);
-        expect(graph.connectedNodes.single, const Pair(1, 1));
+        expect(graph.connectedNodes.single, Pair(1, 1));
       });
 
       test('many links', () {
@@ -133,12 +133,7 @@ void main() {
         expect(graph.nodeCount, 5);
         expect(graph.edgeCount, 4);
 
-        final expectedPairs = const [
-          Pair(1, 2),
-          Pair(2, 3),
-          Pair(3, 4),
-          Pair(4, 5)
-        ];
+        final expectedPairs = [Pair(1, 2), Pair(2, 3), Pair(3, 4), Pair(4, 5)];
 
         expect(graph.connectedNodes, unorderedEquals(expectedPairs));
 
@@ -165,7 +160,7 @@ void main() {
         expect(graph.edgeCount, 13);
 
         expect(graph.connectedNodes,
-            unorderedEquals(expectedPairs.followedBy(const [Pair(1, 5)])));
+            unorderedEquals(expectedPairs.followedBy([Pair(1, 5)])));
 
         // remove just added connection
         expect(graph.removeEdge(1, 5), isTrue);
@@ -179,7 +174,7 @@ void main() {
         expect(graph.edgeCount, 13);
 
         expect(graph.connectedNodes,
-            unorderedEquals(expectedPairs.followedBy(const [Pair(1, 5)])));
+            unorderedEquals(expectedPairs.followedBy([Pair(1, 5)])));
 
         for (var pair in graph.connectedNodes) {
           expect(graph.connected(pair.item1, pair.item2), isTrue);

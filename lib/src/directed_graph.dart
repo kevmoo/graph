@@ -4,7 +4,7 @@ import 'edge.dart';
 import 'node.dart';
 import 'pair.dart';
 
-class DirectedGraph<N, E> {
+class DirectedGraph<N extends Comparable, E> {
   final Map<N, Node<N, E>> _nodes;
 
   int get nodeCount => _nodes.length;
@@ -80,9 +80,7 @@ class DirectedGraph<N, E> {
     final pairs = HashSet<Pair<N>>();
     for (var node in _nodes.entries) {
       for (var edge in node.value.outgoingEdges) {
-        if (!pairs.contains(Pair<N>(edge.target, node.key))) {
-          pairs.add(Pair<N>(node.key, edge.target));
-        }
+        pairs.add(Pair<N>(node.key, edge.target));
       }
     }
     return pairs;
@@ -126,8 +124,6 @@ class DirectedGraph<N, E> {
   /// Note: the node/key type [N] is converted to a [String] by calling
   /// `toString`. To create a valid [Map], the `toString` on each key must be
   /// unique for each node in the map.
-  ///
-  ///
   Map<String, List> toJson() => Map.fromEntries(_nodes.entries.map((e) {
         return MapEntry(e.key.toString(), e.value.outgoingEdges.toList());
       }));
