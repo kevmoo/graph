@@ -13,8 +13,8 @@ void main() {
   print('Edge count: ${graph.edgeCount}');
   // Edge count: 3
 
-  print('JSON: ${graph.toJson()}');
-  // JSON: {c: [a], a: [b], b: [c], d: []}
+  print('toMap: ${graph.toMap()}');
+  // toMap: {c: [a], a: [b], b: [c], d: []}
 
   print('Components: ${graph.stronglyConnectedComponents()}');
   // Components: [[b, a, c], [d]]

@@ -25,19 +25,26 @@ class DirectedGraph<N extends Comparable, E> {
 
   DirectedGraph() : this._(HashMap<N, Node<N, E>>());
 
-  factory DirectedGraph.fromJson(Map<String, dynamic> json,
-      {N Function(String) nodeConvert}) {
-    nodeConvert ??= (String value) => value as N;
+  /// ```dart
+  /// {
+  ///   'a': ['b', {'target': 'b', 'data': 'data'}],
+  ///   'b': []
+  /// }
+  /// ```
+  factory DirectedGraph.fromMap(Map<N, List> source) {
+    Edge<N, E> edgeFromLiteral(Object source) {
+      if (source is Map) {
+        return Edge(source['target'] as N, data: source['data'] as E);
+      }
+      return Edge(source as N);
+    }
 
     // TODO: replace with HashMap.fromEntries - dart-lang/sdk#34818
     final hashMap = HashMap<N, Node<N, E>>()
-      ..addEntries(json.entries.map((entry) {
-        final key = nodeConvert(entry.key);
-        final edges = (entry.value as List ?? const [])
-            .map((v) => Edge<N, E>.fromJson(v, nodeConvert: nodeConvert));
-        final value = Node<N, E>(nodeConvert(entry.key))
-          ..outgoingEdges.addAll(edges);
-        return MapEntry(key, value);
+      ..addEntries(source.entries.map((entry) {
+        final edges = (entry.value ?? const []).map(edgeFromLiteral);
+        final value = Node<N, E>(entry.key)..outgoingEdges.addAll(edges);
+        return MapEntry(entry.key, value);
       }));
     return DirectedGraph._(hashMap);
   }
@@ -127,13 +134,20 @@ class DirectedGraph<N extends Comparable, E> {
       g.stronglyConnectedComponents<N, N>(
           nodes, (n) => n, (n) => _nodes[n].outgoingEdges.map((e) => e.target));
 
-  /// Returns a [Map] representing a valid JSON value of `this`.
-  ///
-  /// Note: the node/key type [N] is converted to a [String] by calling
-  /// `toString`. To create a valid [Map], the `toString` on each key must be
-  /// unique for each node in the map.
-  Map<String, List> toJson() => Map.fromEntries(_nodes.entries.map((e) {
-        return MapEntry(e.key.toString(),
-            e.value.outgoingEdges.map((e) => e.toJson()).toList());
-      }));
+  /// ```dart
+  /// {
+  ///   'a': ['b', {'target': 'b', 'data': 'data'}],
+  ///   'b': []
+  /// }
+  /// ```
+  Map<N, List> toMap() => Map.fromEntries(_nodes.entries.map((e) =>
+      MapEntry(e.key, e.value.outgoingEdges.map(_edgeLiteralData).toList())));
+}
+
+Object _edgeLiteralData(Edge e) {
+  if (e.data == null) {
+    return e.target;
+  }
+
+  return {'target': e.target, 'data': e.data};
 }

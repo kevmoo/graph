@@ -184,17 +184,17 @@ void main() {
     });
   });
 
-  group('json', () {
-    test('toJson', () {
+  group('to/from Map', () {
+    test('toMap', () {
       final graph = DirectedGraph<String, String>();
-      expect(_encodeDecode(graph), {});
+      expect(graph.toMap(), {});
 
       graph.add('a');
       graph.add('b');
-      expect(_encodeDecode(graph), {'a': [], 'b': []});
+      expect(graph.toMap(), {'a': [], 'b': []});
 
       graph.addEdge('a', 'b');
-      expect(_encodeDecode(graph), {
+      expect(graph.toMap(), {
         'a': ['b'],
         'b': []
       });
@@ -209,8 +209,8 @@ void main() {
       });
     });
 
-    test('fromJson', () {
-      final json = {
+    test('fromMap', () {
+      final map = {
         'a': [
           'b',
           {'target': 'b', 'data': 'data'}
@@ -218,60 +218,60 @@ void main() {
         'b': []
       };
       _expectDirectedGraphOutputEqual(
-          DirectedGraph<String, String>.fromJson(json), json);
+          DirectedGraph<String, String>.fromMap(map), map);
 
       // null connections is treated as empty
       _expectDirectedGraphOutputEqual(
-          DirectedGraph<String, String>.fromJson({
+          DirectedGraph<String, String>.fromMap({
             'a': [
               'b',
               {'target': 'b', 'data': 'data'}
             ],
             'b': null // explicitly null
           }),
-          json);
+          map);
     });
 
-    test('fromJson asserts on inconsistant input', () {
-      final json = {
+    test('fromMap asserts on incomplete input', () {
+      final map = {
         'a': [
           {'target': 'b'},
           {'target': 'b', 'data': 'data'}
-        ]
+        ],
+        // Should have a 'b' key here!
       };
 
-      expect(() => DirectedGraph<String, String>.fromJson(json),
+      expect(() => DirectedGraph<String, String>.fromMap(map),
           throwsA(const TypeMatcher<AssertionError>()));
     });
 
-    test('to/fromJson with conversions', () {
-      final json = {
-        '1': [
-          '2',
-          {'target': '2', 'data': 2}
+    test('graph with String keys can round-trip as JSON', () {
+      final graph = DirectedGraph.fromMap({
+        'a': [
+          'b',
+          {'target': 'b', 'data': 'data'}
         ],
-        '2': []
-      };
+        'b': []
+      });
 
-      expect(() => DirectedGraph<int, int>.fromJson(json),
-          throwsA(const TypeMatcher<CastError>()));
+      final toMapOutput = graph.toMap();
 
-      final graph =
-          DirectedGraph<int, int>.fromJson(json, nodeConvert: int.parse);
+      final jsonMap =
+          jsonDecode(jsonEncode(toMapOutput)) as Map<String, dynamic>;
 
-      _expectDirectedGraphOutputEqual(graph, json);
+      expect(jsonMap, toMapOutput);
     });
   });
 
   test('strongly connected components', () {
     expect(DirectedGraph().stronglyConnectedComponents(), isEmpty);
 
-    final graph = DirectedGraph.fromJson({
+    final graph = DirectedGraph.fromMap({
       '1': ['0'],
       '0': ['2', '3'],
       '2': ['1'],
       '3': ['4'],
-      '4': null
+      '4': null,
     });
 
     expect(graph.stronglyConnectedComponents(), [
@@ -282,25 +282,11 @@ void main() {
   });
 }
 
-void _expectDirectedGraphOutputEqual(
-    DirectedGraph graph, Map<String, dynamic> expected) {
-  final prettyEncode = const JsonEncoder.withIndent(' ').convert(graph);
-
-  //printOnFailure(prettyEncode);
-
-  final actual = jsonDecode(prettyEncode) as Map<String, dynamic>;
+void _expectDirectedGraphOutputEqual(DirectedGraph graph, Map expected) {
+  final actual = graph.toMap();
 
   expect(actual.keys, expected.keys);
   for (var key in expected.keys) {
     expect(actual, containsPair(key, unorderedEquals(expected[key] as List)));
-  }
-}
-
-Object _encodeDecode(Object source) {
-  try {
-    return jsonDecode(jsonEncode(source));
-  } on JsonUnsupportedObjectError catch (e) {
-    print([e.unsupportedObject, e.cause, e.partialResult]);
-    rethrow;
   }
 }
