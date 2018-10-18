@@ -1,9 +1,3 @@
-import 'edge.dart';
-
-abstract class Node<Key, Data, EdgeData> implements Set<Edge<Key, EdgeData>> {
-  Key get key;
-
+abstract class Node<Key, Data, EdgeData> implements Map<Key, Set<EdgeData>> {
   Data get data;
-
-  bool edgeTo(Key other) => any((e) => e.target == other);
 }

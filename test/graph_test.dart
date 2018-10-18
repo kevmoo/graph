@@ -24,7 +24,7 @@ void main() {
     // NDs are expected to have value semantics – equals/hashCode/immutable
 
     test('null node not allowed', () {
-      expect(() => graph.add(null), _throwsAssert('key cannot be null'));
+      expect(() => graph.add(null), _throwsAssert('node cannot be null'));
     });
 
     test('adding the same edge twice is a no-op', () {
@@ -228,6 +228,16 @@ void main() {
         ],
         'b': []
       });
+
+      expect(graph.add('c', data: 'c node data'), isTrue);
+      _expectDirectedGraphOutputEqual(graph, {
+        'a': [
+          'b',
+          {'target': 'b', 'data': 'data'}
+        ],
+        'b': [],
+        'c': {'data': 'c node data', 'edges': []}
+      });
     });
 
     test('fromMap', () {
@@ -314,11 +324,21 @@ Matcher _throwsAssert(Object message) {
   return throwsA(matcher);
 }
 
-void _expectDirectedGraphOutputEqual(DirectedGraph graph, Map expected) {
+void _expectDirectedGraphOutputEqual(DirectedGraph graph, Map expected,
+    {bool roundTrip = true}) {
   final actual = graph.toMap();
 
-  expect(actual.keys, expected.keys);
+  expect(actual.keys, unorderedEquals(expected.keys),
+      reason: 'Expected the keys to match.');
   for (var key in expected.keys) {
-    expect(actual, containsPair(key, unorderedEquals(expected[key] as List)));
+    final matcher = expected[key] is List
+        ? unorderedEquals(expected[key] as List)
+        : expected[key];
+    expect(actual, containsPair(key, matcher));
+  }
+
+  if (roundTrip) {
+    _expectDirectedGraphOutputEqual(DirectedGraph.fromMap(actual), expected,
+        roundTrip: false);
   }
 }
