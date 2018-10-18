@@ -14,6 +14,10 @@ void main() {
     test('a new graph is empty', () {
       expect(graph.nodeCount, 0);
       expect(graph.edgeCount, 0);
+      expect(graph.mapView, isEmpty);
+      expect(graph.nodes, isEmpty);
+      expect(graph.connectedNodes, isEmpty);
+      expect(graph.stronglyConnectedComponents(), isEmpty);
     });
 
     // each Node corresponds to a "Node Data" object - ND
