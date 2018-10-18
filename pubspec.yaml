@@ -11,6 +11,7 @@ environment:
   sdk: '>=2.0.0 <3.0.0'
 
 dependencies:
+  collection: ^1.14.10
   graphs: ^0.1.2+1
 
 dev_dependencies:

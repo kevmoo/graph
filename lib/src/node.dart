@@ -1,12 +1,9 @@
-import 'dart:collection';
-
 import 'edge.dart';
 
-class Node<K, E> {
-  final K value;
-  final outgoingEdges = HashSet<Edge<K, E>>();
+abstract class Node<Key, Data, EdgeData> implements Set<Edge<Key, EdgeData>> {
+  Key get key;
 
-  Node(this.value);
+  Data get data;
 
-  bool edgeTo(K other) => outgoingEdges.any((e) => e.target == other);
+  bool edgeTo(Key other) => any((e) => e.target == other);
 }
