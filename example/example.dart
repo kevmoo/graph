@@ -1,7 +1,7 @@
 import 'package:graph/graph.dart';
 
 void main() {
-  final graph = DirectedGraph<String, String>()
+  final graph = DirectedGraph()
     ..addEdge('a', 'b')
     ..addEdge('b', 'c')
     ..addEdge('c', 'a')

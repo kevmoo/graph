@@ -5,10 +5,10 @@ import 'package:test/test.dart';
 
 void main() {
   group('simple', () {
-    DirectedGraph<int, String> graph;
+    DirectedGraph graph;
 
     setUp(() {
-      graph = DirectedGraph<int, String>();
+      graph = DirectedGraph();
     });
 
     test('a new graph is empty', () {
@@ -186,7 +186,7 @@ void main() {
 
   group('to/from Map', () {
     test('toMap', () {
-      final graph = DirectedGraph<String, String>();
+      final graph = DirectedGraph();
       expect(graph.toMap(), {});
 
       graph.add('a');
@@ -217,12 +217,11 @@ void main() {
         ],
         'b': []
       };
-      _expectDirectedGraphOutputEqual(
-          DirectedGraph<String, String>.fromMap(map), map);
+      _expectDirectedGraphOutputEqual(DirectedGraph.fromMap(map), map);
 
       // null connections is treated as empty
       _expectDirectedGraphOutputEqual(
-          DirectedGraph<String, String>.fromMap({
+          DirectedGraph.fromMap({
             'a': [
               'b',
               {'target': 'b', 'data': 'data'}
@@ -241,7 +240,7 @@ void main() {
         // Should have a 'b' key here!
       };
 
-      expect(() => DirectedGraph<String, String>.fromMap(map),
+      expect(() => DirectedGraph.fromMap(map),
           throwsA(const TypeMatcher<AssertionError>()));
     });
 
