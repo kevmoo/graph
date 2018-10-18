@@ -1,3 +1,11 @@
+/// Represents a canonical pair of two items of type [T] where [item1] is less
+/// than or equal to [item2] using [Comparable.compareTo] between the items.
+///
+/// ```dart
+/// print(Pair(1, 2)); // (1, 2)
+/// print(Pair(2, 1)); // (1, 2)
+/// print((Pair(1, 2) == Pair(2, 1)); // true
+/// ```
 class Pair<T extends Comparable> {
   final T item1, item2;
 
@@ -5,11 +13,11 @@ class Pair<T extends Comparable> {
     assert(item1.compareTo(item2) <= 0);
   }
 
-  factory Pair(T item1, T item2) {
-    if (item1.compareTo(item2) <= 0) {
-      return Pair._(item1, item2);
+  factory Pair(T itemA, T itemB) {
+    if (itemA.compareTo(itemB) < 0) {
+      return Pair._(itemA, itemB);
     }
-    return Pair._(item2, item1);
+    return Pair._(itemB, itemA);
   }
 
   @override
