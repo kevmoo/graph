@@ -1,5 +1,5 @@
-class Edge<N, D> {
-  final N target;
+class Edge<K, D> {
+  final K target;
   final D data;
 
   Edge(this.target, {this.data});

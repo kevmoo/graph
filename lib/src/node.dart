@@ -2,11 +2,11 @@ import 'dart:collection';
 
 import 'edge.dart';
 
-class Node<N, E> {
-  final N value;
-  final outgoingEdges = HashSet<Edge<N, E>>();
+class Node<K, E> {
+  final K value;
+  final outgoingEdges = HashSet<Edge<K, E>>();
 
   Node(this.value);
 
-  bool edgeTo(N other) => outgoingEdges.any((e) => e.target == other);
+  bool edgeTo(K other) => outgoingEdges.any((e) => e.target == other);
 }

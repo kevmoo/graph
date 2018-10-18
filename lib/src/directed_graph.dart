@@ -6,12 +6,12 @@ import 'edge.dart';
 import 'node.dart';
 import 'pair.dart';
 
-class DirectedGraph<N extends Comparable, E> {
-  final Map<N, Node<N, E>> _nodes;
+class DirectedGraph<K extends Comparable, E> {
+  final Map<K, Node<K, E>> _nodes;
 
   int get nodeCount => _nodes.length;
 
-  Iterable<N> get nodes => _nodes.keys;
+  Iterable<K> get nodes => _nodes.keys;
 
   int get edgeCount =>
       _nodes.values.fold(0, (int v, n) => v + n.outgoingEdges.length);
@@ -23,7 +23,7 @@ class DirectedGraph<N extends Comparable, E> {
         'The source map must contain every node representing edge data.');
   }
 
-  DirectedGraph() : this._(HashMap<N, Node<N, E>>());
+  DirectedGraph() : this._(HashMap<K, Node<K, E>>());
 
   /// ```dart
   /// {
@@ -31,25 +31,25 @@ class DirectedGraph<N extends Comparable, E> {
   ///   'b': []
   /// }
   /// ```
-  factory DirectedGraph.fromMap(Map<N, List> source) {
-    Edge<N, E> edgeFromLiteral(Object source) {
+  factory DirectedGraph.fromMap(Map<K, List> source) {
+    Edge<K, E> edgeFromLiteral(Object source) {
       if (source is Map) {
-        return Edge(source['target'] as N, data: source['data'] as E);
+        return Edge(source['target'] as K, data: source['data'] as E);
       }
-      return Edge(source as N);
+      return Edge(source as K);
     }
 
     // TODO: replace with HashMap.fromEntries - dart-lang/sdk#34818
-    final hashMap = HashMap<N, Node<N, E>>()
+    final hashMap = HashMap<K, Node<K, E>>()
       ..addEntries(source.entries.map((entry) {
         final edges = (entry.value ?? const []).map(edgeFromLiteral);
-        final value = Node<N, E>(entry.key)..outgoingEdges.addAll(edges);
+        final value = Node<K, E>(entry.key)..outgoingEdges.addAll(edges);
         return MapEntry(entry.key, value);
       }));
     return DirectedGraph._(hashMap);
   }
 
-  bool add(N nodeData) {
+  bool add(K nodeData) {
     if (nodeData == null) {
       throw ArgumentError.notNull('nodeData');
     }
@@ -59,7 +59,7 @@ class DirectedGraph<N extends Comparable, E> {
     return existingCount < nodeCount;
   }
 
-  bool removeNode(N nodeData) {
+  bool removeNode(K nodeData) {
     final node = _nodes.remove(nodeData);
 
     if (node == null) {
@@ -76,7 +76,7 @@ class DirectedGraph<N extends Comparable, E> {
     return true;
   }
 
-  bool connected(N a, N b) {
+  bool connected(K a, K b) {
     final nodeA = _nodes[a];
 
     if (nodeA == null) {
@@ -87,17 +87,17 @@ class DirectedGraph<N extends Comparable, E> {
   }
 
   // TODO: consider caching this!
-  Set<Pair<N>> get connectedNodes {
-    final pairs = HashSet<Pair<N>>();
+  Set<Pair<K>> get connectedNodes {
+    final pairs = HashSet<Pair<K>>();
     for (var node in _nodes.entries) {
       for (var edge in node.value.outgoingEdges) {
-        pairs.add(Pair<N>(node.key, edge.target));
+        pairs.add(Pair<K>(node.key, edge.target));
       }
     }
     return pairs;
   }
 
-  bool addEdge(N from, N to, {E edgeData}) {
+  bool addEdge(K from, K to, {E edgeData}) {
     if (from == null) {
       throw ArgumentError.notNull('from');
     }
@@ -110,7 +110,7 @@ class DirectedGraph<N extends Comparable, E> {
     return _nodeFor(from).outgoingEdges.add(Edge(to, data: edgeData));
   }
 
-  bool removeEdge(N from, N to, {E edgeData}) {
+  bool removeEdge(K from, K to, {E edgeData}) {
     final fromNode = _nodes[from];
 
     if (fromNode == null) {
@@ -120,7 +120,7 @@ class DirectedGraph<N extends Comparable, E> {
     return fromNode.outgoingEdges.remove(Edge(to, data: edgeData));
   }
 
-  Node<N, E> _nodeFor(N nodeData) {
+  Node<K, E> _nodeFor(K nodeData) {
     assert(nodeData != null);
     return _nodes.putIfAbsent(nodeData, () => Node(nodeData));
   }
@@ -130,8 +130,8 @@ class DirectedGraph<N extends Comparable, E> {
     _nodes.clear();
   }
 
-  List<List<N>> stronglyConnectedComponents() =>
-      g.stronglyConnectedComponents<N, N>(
+  List<List<K>> stronglyConnectedComponents() =>
+      g.stronglyConnectedComponents<K, K>(
           nodes, (n) => n, (n) => _nodes[n].outgoingEdges.map((e) => e.target));
 
   /// ```dart
@@ -140,7 +140,7 @@ class DirectedGraph<N extends Comparable, E> {
   ///   'b': []
   /// }
   /// ```
-  Map<N, List> toMap() => Map.fromEntries(_nodes.entries.map((e) =>
+  Map<K, List> toMap() => Map.fromEntries(_nodes.entries.map((e) =>
       MapEntry(e.key, e.value.outgoingEdges.map(_edgeLiteralData).toList())));
 }
 
