@@ -25,11 +25,9 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
 
   DirectedGraph() : this._(HashMap<Key, NodeImpl<Key, NodeData, EdgeData>>());
 
-  factory DirectedGraph.fromMap(Map<Key, Object> source) {
-    // TODO: replace with HashMap.fromEntries - dart-lang/sdk#34818
-    return DirectedGraph._(
-        HashMap()..addEntries(source.entries.map(_fromMapValue)));
-  }
+  factory DirectedGraph.fromMap(Map<Key, Object> source) =>
+      // TODO: replace with HashMap.fromEntries - dart-lang/sdk#34818
+      DirectedGraph._(HashMap()..addEntries(source.entries.map(_fromMapValue)));
 
   bool add(Key node, {NodeData data}) {
     assert(node != null, 'node cannot be null');
