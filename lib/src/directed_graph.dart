@@ -62,7 +62,7 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
     return nodeA.containsKey(b) || _nodes[b].containsKey(a);
   }
 
-// TODO: consider caching this!
+  // TODO: consider caching this!
   Set<Pair<Key>> get connectedNodes {
     final pairs = HashSet<Pair<Key>>();
     for (var node in _nodes.entries) {
@@ -102,7 +102,6 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
     return node;
   }
 
-// TODO: test!
   void clear() {
     _nodes.clear();
   }

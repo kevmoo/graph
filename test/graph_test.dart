@@ -3,6 +3,15 @@ import 'dart:convert';
 import 'package:graph/graph.dart';
 import 'package:test/test.dart';
 
+void _expectEmpty(DirectedGraph graph) {
+  expect(graph.nodeCount, 0);
+  expect(graph.edgeCount, 0);
+  expect(graph.mapView, isEmpty);
+  expect(graph.nodes, isEmpty);
+  expect(graph.connectedNodes, isEmpty);
+  expect(graph.stronglyConnectedComponents(), isEmpty);
+}
+
 void main() {
   group('simple', () {
     DirectedGraph graph;
@@ -12,12 +21,7 @@ void main() {
     });
 
     test('a new graph is empty', () {
-      expect(graph.nodeCount, 0);
-      expect(graph.edgeCount, 0);
-      expect(graph.mapView, isEmpty);
-      expect(graph.nodes, isEmpty);
-      expect(graph.connectedNodes, isEmpty);
-      expect(graph.stronglyConnectedComponents(), isEmpty);
+      _expectEmpty(graph);
     });
 
     // each Node corresponds to a "Node Data" object - ND
@@ -187,6 +191,9 @@ void main() {
           expect(graph.connected(pair.item1, pair.item2), isTrue);
           expect(graph.connected(pair.item2, pair.item1), isTrue);
         }
+
+        graph.clear();
+        _expectEmpty(graph);
       });
     });
 
