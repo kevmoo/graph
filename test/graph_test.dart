@@ -197,18 +197,14 @@ void main() {
       });
     });
 
-    group('data', () {
-      test('cannot add different data to the same node', () {
-        expect(graph.add(1, data: 'data'), isTrue);
-        expect(graph.add(1), isFalse);
-        expect(graph.add(1, data: 'data'), isFalse);
-        expect(
-            () => graph.add(1, data: 'other data'),
-            _throwsAssert('If nodeData is provided and the node '
-                'exists, it must be identical to the stored data.'));
-      });
-
-      test('node data should round-trip via to/from Map', () {});
+    test('cannot add different data to the same node', () {
+      expect(graph.add(1, data: 'data'), isTrue);
+      expect(graph.add(1), isFalse);
+      expect(graph.add(1, data: 'data'), isFalse);
+      expect(
+          () => graph.add(1, data: 'other data'),
+          _throwsAssert('If nodeData is provided and the node '
+              'exists, it must be identical to the stored data.'));
     });
   });
 
@@ -293,12 +289,29 @@ void main() {
         'b': []
       });
 
-      final toMapOutput = graph.toMap();
+      var jsonMap =
+          jsonDecode(jsonEncode(graph.toMap())) as Map<String, dynamic>;
 
-      final jsonMap =
-          jsonDecode(jsonEncode(toMapOutput)) as Map<String, dynamic>;
+      _expectDirectedGraphOutputEqual(graph, jsonMap);
 
-      expect(jsonMap, toMapOutput);
+      // even with data on the nodes
+      graph.add('c', data: 'c node data');
+      graph.addEdge('c', 'b', edgeData: 'c -> b data');
+      graph.addEdge('c', 'a');
+
+      jsonMap = jsonDecode(jsonEncode(graph.toMap())) as Map<String, dynamic>;
+
+      expect(jsonMap['c'], {
+        'data': 'c node data',
+        'edges': unorderedEquals([
+          {'target': 'b', 'data': 'c -> b data'},
+          'a'
+        ])
+      });
+
+      final newGraph = _expectDirectedGraphOutputEqual(graph, jsonMap);
+      expect(newGraph, isNot(same(graph)));
+      expect(newGraph.mapView['c'].data, 'c node data');
     });
   });
 
@@ -331,8 +344,14 @@ Matcher _throwsAssert(Object message) {
   return throwsA(matcher);
 }
 
-void _expectDirectedGraphOutputEqual(DirectedGraph graph, Map expected,
-    {bool roundTrip = true}) {
+/// If [roundTrip] is `true`, return the graph created by calling `toMap`
+/// on [graph] and then creating a new [DirectedGraph].
+///
+/// Else, return [graph] unchanged.
+DirectedGraph<A, B, C>
+    _expectDirectedGraphOutputEqual<A extends Comparable, B, C>(
+        DirectedGraph<A, B, C> graph, Map<A, dynamic> expected,
+        {bool roundTrip = true}) {
   final actual = graph.toMap();
 
   expect(actual.keys, unorderedEquals(expected.keys),
@@ -345,7 +364,9 @@ void _expectDirectedGraphOutputEqual(DirectedGraph graph, Map expected,
   }
 
   if (roundTrip) {
-    _expectDirectedGraphOutputEqual(DirectedGraph.fromMap(actual), expected,
+    return _expectDirectedGraphOutputEqual<A, B, C>(
+        DirectedGraph.fromMap(actual), expected,
         roundTrip: false);
   }
+  return graph;
 }
