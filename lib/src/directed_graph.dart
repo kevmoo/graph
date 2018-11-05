@@ -106,9 +106,29 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
     _nodes.clear();
   }
 
+  /// Returns all of the nodes with edges from [node].
+  ///
+  /// Throws an [AssertionError] if [node] does not exist.
+  Iterable<Key> edgesFrom(Key node) {
+    assert(_nodes.containsKey(node), 'graph does not contain `node`.');
+    return _nodes[node].keys;
+  }
+
   List<List<Key>> stronglyConnectedComponents() =>
-      g.stronglyConnectedComponents<Key, Key>(
-          nodes, (n) => n, (n) => _nodes[n].keys);
+      g.stronglyConnectedComponents<Key, Key>(nodes, (n) => n, edgesFrom);
+
+  List<Key> shortestPath(Key start, Key target) {
+    assert(_nodes.containsKey(start), 'graph does not contain `start`.');
+    assert(_nodes.containsKey(target), 'graph does not contain `target`.');
+    return g.shortestPath(start, target, _identity, edgesFrom);
+  }
+
+  Map<Key, List<Key>> shortestPaths(Key start) {
+    assert(_nodes.containsKey(start), 'graph does not contain `start`.');
+    return g.shortestPaths(start, _identity, edgesFrom);
+  }
+
+  Key _identity(Key k) => k;
 
   Map<Key, Object> toMap() => Map.fromEntries(_nodes.entries.map(_toMapValue));
 }

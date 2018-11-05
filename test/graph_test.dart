@@ -3,18 +3,22 @@ import 'dart:convert';
 import 'package:graph/graph.dart';
 import 'package:test/test.dart';
 
-void _expectEmpty(DirectedGraph graph) {
+import 'test_util.dart';
+
+void _expectEmpty(DirectedGraph<int, dynamic, dynamic> graph) {
   expect(graph.nodeCount, 0);
   expect(graph.edgeCount, 0);
   expect(graph.mapView, isEmpty);
   expect(graph.nodes, isEmpty);
   expect(graph.connectedNodes, isEmpty);
   expect(graph.stronglyConnectedComponents(), isEmpty);
+  expect(() => graph.edgesFrom(2),
+      throwsAssertionError('graph does not contain `node`.'));
 }
 
 void main() {
   group('simple', () {
-    DirectedGraph graph;
+    DirectedGraph<int, dynamic, dynamic> graph;
 
     setUp(() {
       graph = DirectedGraph();
@@ -28,7 +32,8 @@ void main() {
     // NDs are expected to have value semantics – equals/hashCode/immutable
 
     test('null node not allowed', () {
-      expect(() => graph.add(null), _throwsAssert('node cannot be null'));
+      expect(
+          () => graph.add(null), throwsAssertionError('node cannot be null'));
     });
 
     test('adding the same edge twice is a no-op', () {
@@ -61,11 +66,11 @@ void main() {
     group('edges', () {
       test('adding to/from a null node is not allowed', () {
         expect(() => graph.addEdge(null, null),
-            _throwsAssert('from cannot be null'));
-        expect(
-            () => graph.addEdge(null, 1), _throwsAssert('from cannot be null'));
-        expect(
-            () => graph.addEdge(1, null), _throwsAssert('to cannot be null'));
+            throwsAssertionError('from cannot be null'));
+        expect(() => graph.addEdge(null, 1),
+            throwsAssertionError('from cannot be null'));
+        expect(() => graph.addEdge(1, null),
+            throwsAssertionError('to cannot be null'));
       });
 
       test('node self edges are okay', () {
@@ -88,7 +93,7 @@ void main() {
         expect(graph.edgeCount, 2, reason: 'different edge data');
       });
 
-      test('removing a non-existant edge retuns `false`', () {
+      test('removing a non-existant edge returns `false`', () {
         graph.addEdge(1, 2);
         graph.addEdge(2, 1);
         expect(graph.nodeCount, 2);
@@ -119,6 +124,8 @@ void main() {
       test('empty graph has no connection', () {
         expect(graph.connected(0, 1), isFalse);
         expect(graph.connectedNodes, isEmpty);
+        expect(() => graph.edgesFrom(2),
+            throwsAssertionError('graph does not contain `node`.'));
       });
 
       test('self link', () {
@@ -130,6 +137,9 @@ void main() {
 
         expect(graph.connected(1, 1), isTrue);
         expect(graph.connectedNodes.single, Pair(1, 1));
+        expect(graph.edgesFrom(1), [1]);
+        expect(() => graph.edgesFrom(2),
+            throwsAssertionError('graph does not contain `node`.'));
       });
 
       test('many links', () {
@@ -192,6 +202,10 @@ void main() {
           expect(graph.connected(pair.item2, pair.item1), isTrue);
         }
 
+        for (var node in graph.nodes) {
+          expect(graph.edgesFrom(node), graph.mapView[node].keys);
+        }
+
         graph.clear();
         _expectEmpty(graph);
       });
@@ -203,7 +217,7 @@ void main() {
       expect(graph.add(1, data: 'data'), isFalse);
       expect(
           () => graph.add(1, data: 'other data'),
-          _throwsAssert('If nodeData is provided and the node '
+          throwsAssertionError('If nodeData is provided and the node '
               'exists, it must be identical to the stored data.'));
     });
   });
@@ -276,7 +290,7 @@ void main() {
 
       expect(
           () => DirectedGraph.fromMap(map),
-          _throwsAssert('The source map must contain every node '
+          throwsAssertionError('The source map must contain every node '
               'representing edge data.'));
     });
 
@@ -332,16 +346,6 @@ void main() {
       unorderedEquals(['0', '1', '2'])
     ]);
   });
-}
-
-Matcher _throwsAssert(Object message) {
-  var matcher = const TypeMatcher<AssertionError>();
-
-  if (message != null) {
-    matcher = matcher.having((ae) => ae.message, 'message', message);
-  }
-
-  return throwsA(matcher);
 }
 
 /// If [roundTrip] is `true`, return the graph created by calling `toMap`
