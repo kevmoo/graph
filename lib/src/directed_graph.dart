@@ -29,15 +29,15 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
       // TODO: replace with HashMap.fromEntries - dart-lang/sdk#34818
       DirectedGraph._(HashMap()..addEntries(source.entries.map(_fromMapValue)));
 
-  bool add(Key node, {NodeData data}) {
-    assert(node != null, 'node cannot be null');
+  bool add(Key key, {NodeData data}) {
+    assert(key != null, 'node cannot be null');
     final existingCount = nodeCount;
-    _nodeFor(node, data);
+    _nodeFor(key, data);
     return existingCount < nodeCount;
   }
 
-  bool removeNode(Key nodeData) {
-    final node = _nodes.remove(nodeData);
+  bool removeNode(Key key) {
+    final node = _nodes.remove(key);
 
     if (node == null) {
       return false;
@@ -46,7 +46,7 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
     // find all edges coming into `node` - and remove them
     for (var otherNode in _nodes.values) {
       assert(otherNode != node);
-      otherNode.removeAllEdgesTo(nodeData);
+      otherNode.removeAllEdgesTo(key);
     }
 
     return true;
