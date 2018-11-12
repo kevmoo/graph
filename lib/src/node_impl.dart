@@ -1,21 +1,17 @@
 import 'dart:collection';
 
-import 'package:collection/collection.dart' show UnmodifiableMapView;
+import 'hash_helper.dart';
 
-import 'node.dart';
+class NodeImpl<K, E> extends UnmodifiableMapBase<K, Set<E>> {
+  final Map<K, Set<E>> _map;
 
-class NodeImpl<Key, Data, EdgeData>
-    extends UnmodifiableMapView<Key, Set<EdgeData>>
-    with Node<Key, Data, EdgeData> {
-  final Map<Key, Set<EdgeData>> _map;
+  NodeImpl._(this._map);
 
-  @override
-  final Data data;
-
-  NodeImpl._(this.data, this._map) : super(_map);
-
-  factory NodeImpl(Data data, {Iterable<MapEntry<Key, EdgeData>> edges}) {
-    final node = NodeImpl._(data, HashMap<Key, Set<EdgeData>>());
+  factory NodeImpl(HashHelper<K> hashHelper, {Iterable<MapEntry<K, E>> edges}) {
+    final node = NodeImpl._(
+      HashMap<K, Set<E>>(
+          equals: hashHelper.equalsField, hashCode: hashHelper.hashCodeField),
+    );
 
     if (edges != null) {
       for (var e in edges) {
@@ -26,14 +22,16 @@ class NodeImpl<Key, Data, EdgeData>
     return node;
   }
 
-  bool addEdge(Key target, EdgeData data) {
+  bool addEdge(K target, E data) {
     assert(target != null);
-    return _map.putIfAbsent(target, () => HashSet<EdgeData>()).add(data);
+    return _map.putIfAbsent(target, _createSet).add(data);
   }
 
-  bool removeAllEdgesTo(Key target) => _map.remove(target) != null;
+  Set<E> _createSet() => HashSet<E>();
 
-  bool removeEdge(Key target, EdgeData data) {
+  bool removeAllEdgesTo(K target) => _map.remove(target) != null;
+
+  bool removeEdge(K target, E data) {
     assert(target != null);
 
     final set = _map[target];
@@ -49,4 +47,10 @@ class NodeImpl<Key, Data, EdgeData>
       assert(!_map.containsKey(target) || _map[target].isNotEmpty);
     }
   }
+
+  @override
+  Set<E> operator [](Object key) => _map[key];
+
+  @override
+  Iterable<K> get keys => _map.keys;
 }

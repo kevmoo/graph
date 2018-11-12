@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 
 import 'test_util.dart';
 
-void _expectEmpty(DirectedGraph<int, dynamic, dynamic> graph) {
+void _expectEmpty(DirectedGraph<int, dynamic> graph) {
   expect(graph.nodeCount, 0);
   expect(graph.edgeCount, 0);
   expect(graph.mapView, isEmpty);
@@ -18,7 +18,7 @@ void _expectEmpty(DirectedGraph<int, dynamic, dynamic> graph) {
 
 void main() {
   group('simple', () {
-    DirectedGraph<int, dynamic, dynamic> graph;
+    DirectedGraph<int, dynamic> graph;
 
     setUp(() {
       graph = DirectedGraph();
@@ -210,16 +210,6 @@ void main() {
         _expectEmpty(graph);
       });
     });
-
-    test('cannot add different data to the same node', () {
-      expect(graph.add(1, data: 'data'), isTrue);
-      expect(graph.add(1), isFalse);
-      expect(graph.add(1, data: 'data'), isFalse);
-      expect(
-          () => graph.add(1, data: 'other data'),
-          throwsAssertionError('If nodeData is provided and the node '
-              'exists, it must be identical to the stored data.'));
-    });
   });
 
   group('to/from Map', () {
@@ -246,14 +236,14 @@ void main() {
         'b': []
       });
 
-      expect(graph.add('c', data: 'c node data'), isTrue);
+      expect(graph.add('c'), isTrue);
       _expectDirectedGraphOutputEqual(graph, {
         'a': [
           'b',
           {'target': 'b', 'data': 'data'}
         ],
         'b': [],
-        'c': {'data': 'c node data', 'edges': []}
+        'c': [],
       });
     });
 
@@ -279,19 +269,29 @@ void main() {
           map);
     });
 
-    test('fromMap asserts on incomplete input', () {
-      final map = {
-        'a': [
-          {'target': 'b'},
-          {'target': 'b', 'data': 'data'}
-        ],
-        // Should have a 'b' key here!
-      };
-
-      expect(
-          () => DirectedGraph.fromMap(map),
-          throwsAssertionError('The source map must contain every node '
-              'representing edge data.'));
+    test('fromMap allows incomplete input', () {
+      // null connections is treated as empty
+      _expectDirectedGraphOutputEqual(
+          DirectedGraph.fromMap({
+            'a': [
+              'b',
+              {'target': 'b', 'data': 'data'},
+              'c',
+              {'target': 'c', 'data': 'c data'},
+            ],
+            'c': ['b'],
+            // missing 'b' key is okay
+          }),
+          {
+            'a': [
+              'b',
+              {'target': 'b', 'data': 'data'},
+              'c',
+              {'target': 'c', 'data': 'c data'},
+            ],
+            'b': [],
+            'c': ['b']
+          });
     });
 
     test('graph with String keys can round-trip as JSON', () {
@@ -309,23 +309,19 @@ void main() {
       _expectDirectedGraphOutputEqual(graph, jsonMap);
 
       // even with data on the nodes
-      graph.add('c', data: 'c node data');
+      graph.add('c');
       graph.addEdge('c', 'b', edgeData: 'c -> b data');
       graph.addEdge('c', 'a');
 
       jsonMap = jsonDecode(jsonEncode(graph.toMap())) as Map<String, dynamic>;
 
-      expect(jsonMap['c'], {
-        'data': 'c node data',
-        'edges': unorderedEquals([
-          {'target': 'b', 'data': 'c -> b data'},
-          'a'
-        ])
-      });
+      expect(jsonMap['c'], [
+        'a',
+        {'target': 'b', 'data': 'c -> b data'}
+      ]);
 
       final newGraph = _expectDirectedGraphOutputEqual(graph, jsonMap);
       expect(newGraph, isNot(same(graph)));
-      expect(newGraph.mapView['c'].data, 'c node data');
     });
   });
 
@@ -352,10 +348,9 @@ void main() {
 /// on [graph] and then creating a new [DirectedGraph].
 ///
 /// Else, return [graph] unchanged.
-DirectedGraph<A, B, C>
-    _expectDirectedGraphOutputEqual<A extends Comparable, B, C>(
-        DirectedGraph<A, B, C> graph, Map<A, dynamic> expected,
-        {bool roundTrip = true}) {
+DirectedGraph<A, C> _expectDirectedGraphOutputEqual<A, C>(
+    DirectedGraph<A, C> graph, Map<A, dynamic> expected,
+    {bool roundTrip = true}) {
   final actual = graph.toMap();
 
   expect(actual.keys, unorderedEquals(expected.keys),
@@ -368,7 +363,7 @@ DirectedGraph<A, B, C>
   }
 
   if (roundTrip) {
-    return _expectDirectedGraphOutputEqual<A, B, C>(
+    return _expectDirectedGraphOutputEqual<A, C>(
         DirectedGraph.fromMap(actual), expected,
         roundTrip: false);
   }
