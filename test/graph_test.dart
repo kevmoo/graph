@@ -315,10 +315,13 @@ void main() {
 
       jsonMap = jsonDecode(jsonEncode(graph.toMap())) as Map<String, dynamic>;
 
-      expect(jsonMap['c'], [
-        'a',
-        {'target': 'b', 'data': 'c -> b data'}
-      ]);
+      expect(
+        jsonMap['c'],
+        unorderedEquals([
+          'a',
+          {'target': 'b', 'data': 'c -> b data'}
+        ]),
+      );
 
       final newGraph = _expectDirectedGraphOutputEqual(graph, jsonMap);
       expect(newGraph, isNot(same(graph)));
