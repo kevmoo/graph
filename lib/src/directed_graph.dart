@@ -3,40 +3,67 @@ import 'dart:collection';
 import 'package:collection/collection.dart' show UnmodifiableMapView;
 import 'package:graphs/graphs.dart' as g;
 
-import 'node.dart';
+import 'hash_helper.dart';
 import 'node_impl.dart';
 import 'pair.dart';
 
-class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
-  final Map<Key, NodeImpl<Key, NodeData, EdgeData>> _nodes;
-  final Map<Key, Node<Key, NodeData, EdgeData>> mapView;
+class DirectedGraph<K, E> {
+  final Map<K, NodeImpl<K, E>> _nodes;
+  final Map<K, Map<K, Set<E>>> mapView;
+
+  final HashHelper<K> _hashHelper;
 
   int get nodeCount => _nodes.length;
 
-  Iterable<Key> get nodes => _nodes.keys;
+  Iterable<K> get nodes => _nodes.keys;
 
   int get edgeCount =>
       _nodes.values.expand((n) => n.values).expand((s) => s).length;
 
-  DirectedGraph._(this._nodes) : mapView = UnmodifiableMapView(_nodes) {
-    assert(_nodes.values.every((node) => node.keys.every(_nodes.containsKey)),
-        'The source map must contain every node representing edge data.');
+  DirectedGraph._(this._nodes, this._hashHelper)
+      : mapView = UnmodifiableMapView(_nodes);
+
+  DirectedGraph({
+    bool equals(K key1, K key2),
+    int hashCode(K key),
+  }) : this._(HashMap<K, NodeImpl<K, E>>(hashCode: hashCode, equals: equals),
+            HashHelper(equals, hashCode));
+
+  factory DirectedGraph.fromMap(Map<K, Object> source) {
+    final graph = DirectedGraph<K, E>();
+
+    MapEntry<K, E> fromMapValue(Object e) {
+      if (e is Map &&
+          e.length == 2 &&
+          e.containsKey('target') &&
+          e.containsKey('data')) {
+        return MapEntry(e['target'] as K, e['data'] as E);
+      }
+
+      return MapEntry(e as K, null);
+    }
+
+    for (var entry in source.entries) {
+      final entryNode = graph._nodeFor(entry.key);
+      final edgeData = entry.value as List ?? const [];
+
+      for (var to in edgeData.map(fromMapValue)) {
+        graph._nodeFor(to.key);
+        entryNode.addEdge(to.key, to.value);
+      }
+    }
+
+    return graph;
   }
 
-  DirectedGraph() : this._(HashMap<Key, NodeImpl<Key, NodeData, EdgeData>>());
-
-  factory DirectedGraph.fromMap(Map<Key, Object> source) =>
-      // TODO: replace with HashMap.fromEntries - dart-lang/sdk#34818
-      DirectedGraph._(HashMap()..addEntries(source.entries.map(_fromMapValue)));
-
-  bool add(Key key, {NodeData data}) {
+  bool add(K key) {
     assert(key != null, 'node cannot be null');
     final existingCount = nodeCount;
-    _nodeFor(key, data);
+    _nodeFor(key);
     return existingCount < nodeCount;
   }
 
-  bool removeNode(Key key) {
+  bool removeNode(K key) {
     final node = _nodes.remove(key);
 
     if (node == null) {
@@ -52,7 +79,7 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
     return true;
   }
 
-  bool connected(Key a, Key b) {
+  bool connected(K a, K b) {
     final nodeA = _nodes[a];
 
     if (nodeA == null) {
@@ -62,27 +89,16 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
     return nodeA.containsKey(b) || _nodes[b].containsKey(a);
   }
 
-  // TODO: consider caching this!
-  Set<Pair<Key>> get connectedNodes {
-    final pairs = HashSet<Pair<Key>>();
-    for (var node in _nodes.entries) {
-      for (var edge in node.value.keys) {
-        pairs.add(Pair<Key>(node.key, edge));
-      }
-    }
-    return pairs;
-  }
-
-  bool addEdge(Key from, Key to, {EdgeData edgeData}) {
+  bool addEdge(K from, K to, {E edgeData}) {
     assert(from != null, 'from cannot be null');
     assert(to != null, 'to cannot be null');
 
     // ensure the `to` node exists
-    _nodeFor(to, null);
-    return _nodeFor(from, null).addEdge(to, edgeData);
+    _nodeFor(to);
+    return _nodeFor(from).addEdge(to, edgeData);
   }
 
-  bool removeEdge(Key from, Key to, {EdgeData edgeData}) {
+  bool removeEdge(K from, K to, {E edgeData}) {
     final fromNode = _nodes[from];
 
     if (fromNode == null) {
@@ -92,13 +108,21 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
     return fromNode.removeEdge(to, edgeData);
   }
 
-  NodeImpl<Key, NodeData, EdgeData> _nodeFor(Key nodeKey, NodeData nodeData) {
+  // TODO: consider caching this!
+  Set<Pair<K>> get connectedNodes {
+    final pairs = HashSet<Pair<K>>(
+        equals: _hashHelper.pairsEqual, hashCode: _hashHelper.pairHashCode);
+    for (var node in _nodes.entries) {
+      for (var edge in node.value.keys) {
+        pairs.add(Pair<K>(node.key, edge));
+      }
+    }
+    return pairs;
+  }
+
+  NodeImpl<K, E> _nodeFor(K nodeKey) {
     assert(nodeKey != null);
-    final node = _nodes.putIfAbsent(nodeKey, () => NodeImpl(nodeData));
-    assert(
-        nodeData == null || identical(nodeData, node.data),
-        'If nodeData is provided and the node exists, '
-        'it must be identical to the stored data.');
+    final node = _nodes.putIfAbsent(nodeKey, () => NodeImpl(_hashHelper));
     return node;
   }
 
@@ -109,56 +133,45 @@ class DirectedGraph<Key extends Comparable, NodeData, EdgeData> {
   /// Returns all of the nodes with edges from [node].
   ///
   /// Throws an [AssertionError] if [node] does not exist.
-  Iterable<Key> edgesFrom(Key node) {
+  Iterable<K> edgesFrom(K node) {
     assert(_nodes.containsKey(node), 'graph does not contain `node`.');
     return _nodes[node].keys;
   }
 
-  List<List<Key>> stronglyConnectedComponents() =>
-      g.stronglyConnectedComponents<Key, Key>(nodes, (n) => n, edgesFrom);
+  List<List<K>> stronglyConnectedComponents() =>
+      g.stronglyConnectedComponents<K>(
+        nodes,
+        edgesFrom,
+        equals: _hashHelper.equalsField,
+        hashCode: _hashHelper.hashCodeField,
+      );
 
-  List<Key> shortestPath(Key start, Key target) {
+  List<K> shortestPath(K start, K target) {
     assert(_nodes.containsKey(start), 'graph does not contain `start`.');
     assert(_nodes.containsKey(target), 'graph does not contain `target`.');
-    return g.shortestPath(start, target, _identity, edgesFrom);
+    return g.shortestPath(
+      start,
+      target,
+      edgesFrom,
+      equals: _hashHelper.equalsField,
+      hashCode: _hashHelper.hashCodeField,
+    );
   }
 
-  Map<Key, List<Key>> shortestPaths(Key start) {
+  Map<K, List<K>> shortestPaths(K start) {
     assert(_nodes.containsKey(start), 'graph does not contain `start`.');
-    return g.shortestPaths(start, _identity, edgesFrom);
+    return g.shortestPaths(
+      start,
+      edgesFrom,
+      equals: _hashHelper.equalsField,
+      hashCode: _hashHelper.hashCodeField,
+    );
   }
 
-  Key _identity(Key k) => k;
-
-  Map<Key, Object> toMap() => Map.fromEntries(_nodes.entries.map(_toMapValue));
+  Map<K, Object> toMap() => Map.fromEntries(_nodes.entries.map(_toMapValue));
 }
 
-MapEntry<Key, NodeImpl<Key, NodeData, EdgeData>>
-    _fromMapValue<Key, NodeData, EdgeData>(MapEntry<Key, Object> source) {
-  final sourceValue = source.value;
-  NodeData data;
-  List edgeData;
-
-  if (sourceValue is Map) {
-    data = sourceValue['data'] as NodeData;
-    edgeData = sourceValue['edges'] as List;
-  } else {
-    edgeData = sourceValue as List ?? const [];
-  }
-
-  return MapEntry(
-      source.key,
-      NodeImpl<Key, NodeData, EdgeData>(data, edges: edgeData.map((e) {
-        if (e is Map) {
-          return MapEntry(e['target'] as Key, e['data'] as EdgeData);
-        }
-
-        return MapEntry(e as Key, null);
-      })));
-}
-
-MapEntry<Key, Object> _toMapValue<Key>(
-    MapEntry<Key, Node<Key, dynamic, dynamic>> entry) {
+MapEntry<Key, Object> _toMapValue<Key>(MapEntry<Key, Map<Key, Set>> entry) {
   final nodeEdges = entry.value.entries.expand((e) {
     assert(e.value.isNotEmpty);
     return e.value.map((edgeData) {
@@ -169,8 +182,5 @@ MapEntry<Key, Object> _toMapValue<Key>(
     });
   }).toList();
 
-  final value = entry.value.data == null
-      ? nodeEdges
-      : {'data': entry.value.data, 'edges': nodeEdges};
-  return MapEntry(entry.key, value);
+  return MapEntry(entry.key, nodeEdges);
 }
