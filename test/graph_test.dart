@@ -327,24 +327,6 @@ void main() {
       expect(newGraph, isNot(same(graph)));
     });
   });
-
-  test('strongly connected components', () {
-    expect(DirectedGraph().stronglyConnectedComponents(), isEmpty);
-
-    final graph = DirectedGraph.fromMap({
-      '1': ['0'],
-      '0': ['2', '3'],
-      '2': ['1'],
-      '3': ['4'],
-      '4': null,
-    });
-
-    expect(graph.stronglyConnectedComponents(), [
-      ['4'],
-      ['3'],
-      unorderedEquals(['0', '1', '2'])
-    ]);
-  });
 }
 
 /// If [roundTrip] is `true`, return the graph created by calling `toMap`
