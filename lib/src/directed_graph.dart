@@ -110,8 +110,7 @@ class DirectedGraph<K, E> {
 
   // TODO: consider caching this!
   Set<Pair<K>> get connectedNodes {
-    final pairs = HashSet<Pair<K>>(
-        equals: _hashHelper.pairsEqual, hashCode: _hashHelper.pairHashCode);
+    final pairs = _hashHelper.createPairSet();
     for (var node in _nodes.entries) {
       for (var edge in node.value.keys) {
         pairs.add(Pair<K>(node.key, edge));
