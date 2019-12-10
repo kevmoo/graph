@@ -24,8 +24,8 @@ class DirectedGraph<K, E> {
       : mapView = UnmodifiableMapView(_nodes);
 
   DirectedGraph({
-    bool equals(K key1, K key2),
-    int hashCode(K key),
+    bool Function(K key1, K key2) equals,
+    int Function(K key) hashCode,
   }) : this._(HashMap<K, NodeImpl<K, E>>(hashCode: hashCode, equals: equals),
             HashHelper(equals, hashCode));
 
