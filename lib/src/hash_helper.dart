@@ -13,14 +13,16 @@ abstract class HashHelper<K> {
   factory HashHelper(
       bool Function(K key1, K key2) equals, int Function(K) hashCode) {
     if (equals == null && hashCode == null) {
-      return _TrivialHashHelper();
+      return const _TrivialHashHelper();
     }
 
     return _HashHelperImpl(
-        equals ?? _defaultEquals, hashCode ?? _defaultHashCode);
+      equals ?? _defaultEquals,
+      hashCode ?? _defaultHashCode,
+    );
   }
 
-  HashHelper._(this.equalsField, this.hashCodeField);
+  const HashHelper._(this.equalsField, this.hashCodeField);
 
   HashSet<Pair<K>> createPairSet() =>
       HashSet<Pair<K>>(equals: _pairsEqual, hashCode: _pairHashCode);
@@ -46,7 +48,7 @@ class _HashHelperImpl<K> extends HashHelper<K> {
 }
 
 class _TrivialHashHelper<K> extends HashHelper<K> {
-  _TrivialHashHelper() : super._(null, null);
+  const _TrivialHashHelper() : super._(null, null);
 
   @override
   int _pairHashCode(Pair<K> pair) => pair.item1.hashCode ^ pair.item2.hashCode;

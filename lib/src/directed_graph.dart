@@ -26,8 +26,10 @@ class DirectedGraph<K, E> {
   DirectedGraph({
     bool Function(K key1, K key2) equals,
     int Function(K key) hashCode,
-  }) : this._(HashMap<K, NodeImpl<K, E>>(hashCode: hashCode, equals: equals),
-            HashHelper(equals, hashCode));
+  }) : this._(
+          HashMap<K, NodeImpl<K, E>>(hashCode: hashCode, equals: equals),
+          HashHelper(equals, hashCode),
+        );
 
   factory DirectedGraph.fromMap(Map<K, Object> source) {
     final graph = DirectedGraph<K, E>();

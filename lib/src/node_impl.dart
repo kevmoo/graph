@@ -10,7 +10,9 @@ class NodeImpl<K, E> extends UnmodifiableMapBase<K, Set<E>> {
   factory NodeImpl(HashHelper<K> hashHelper, {Iterable<MapEntry<K, E>> edges}) {
     final node = NodeImpl._(
       HashMap<K, Set<E>>(
-          equals: hashHelper.equalsField, hashCode: hashHelper.hashCodeField),
+        equals: hashHelper.equalsField,
+        hashCode: hashHelper.hashCodeField,
+      ),
     );
 
     if (edges != null) {
