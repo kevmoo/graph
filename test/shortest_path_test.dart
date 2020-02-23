@@ -76,13 +76,14 @@ void main() {
     // Be deterministic in the generated graph. This test may have to be updated
     // if the behavior of `Random` changes for the provided seed.
     final _rnd = Random(1);
-    final size = 1000;
+    const size = 1000;
     final graph = DirectedGraph<int, dynamic>();
 
     List<int> resultForGraph() {
       try {
         return graph.shortestPath(0, size - 1);
-      } on AssertionError {
+      } on AssertionError // ignore: avoid_catching_errors
+      {
         return null;
       }
     }
